@@ -140,6 +140,52 @@
             box-shadow: 0 2px 8px rgba(68, 160, 141, 0.4);
         }
 
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
         .delay-input {
             display: flex;
             align-items: center;
@@ -310,9 +356,11 @@
             <div class="slider-container">
                 <label class="slider-label">Background Mode</label>
                 <div class="slider-row">
-                    <span style="color: rgba(255,255,255,0.8); font-size: 12px;">Static</span>
-                    <input type="range" id="backgroundSlider" min="0" max="1" step="1" value="0">
-                    <span style="color: rgba(255,255,255,0.8); font-size: 12px;">Dynamic</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="backgroundToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span style="color: white; font-size: 14px; margin-left: 10px;" id="modeLabel">Static</span>
                 </div>
             </div>
             
