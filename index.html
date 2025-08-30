@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Extraction Camera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 90vw;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .camera-container {
+            position: relative;
+            display: inline-block;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        #video {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 640px;
+            max-height: 480px;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.5;
+            mix-blend-mode: difference;
+            pointer-events: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            #video {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Motion Extraction</h1>
+        
+        <div class="status" id="status">Click "Start Camera" to begin</div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Camera</button>
+            <button id="captureBtn" disabled>Capture Background</button>
+            <button id="resetBtn" disabled>Reset Background</button>
+        </div>
+        
+        <div class="camera-container" id="cameraContainer" style="display: none;">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div class="info">
+            <p><strong>How it works:</strong> This motion extraction filter captures a background frame, converts it to black and white, inverts it, and overlays it on the live video feed. Moving objects will appear more prominently as they differ from the static background.</p>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        let video, canvas, ctx;
+        let backgroundImageData = null;
+        let stream = null;
+        let animationId = null;
+
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const status = document.getElementById('status');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const errorDiv = document.getElementById('error');
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            errorDiv.style.display = 'none';
+        }
+
+        async function startCamera() {
+            try {
+                hideError();
+                status.textContent = 'Requesting camera access...';
+                
+                // Request camera with preference for back camera on mobile
+                const constraints = {
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: { ideal: 'environment' } // Try back camera first
+                    }
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                ctx = canvas.getContext('2d');
+
+                video.srcObject = stream;
+                
+                video.addEventListener('loadedmetadata', () => {
+                    // Set canvas size to match video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    cameraContainer.style.display = 'inline-block';
+                    startBtn.disabled = true;
+                    captureBtn.disabled = false;
+                    resetBtn.disabled = false;
+                    status.textContent = 'Camera ready! Click "Capture Background" to set the reference frame.';
+                });
+
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                let message = 'Unable to access camera. ';
+                
+                if (error.name === 'NotAllowedError') {
+                    message += 'Please allow camera permissions and try again.';
+                } else if (error.name === 'NotFoundError') {
+                    message += 'No camera found on this device.';
+                } else {
+                    message += 'Please check your camera settings and try again.';
+                }
+                
+                showError(message);
+                status.textContent = 'Camera access failed';
+            }
+        }
+
+        function captureBackground() {
+            if (!video || !ctx) return;
+
+            // Capture current frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            backgroundImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Convert to grayscale and invert
+            const data = backgroundImageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                // Convert to grayscale using luminance formula
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                
+                // Invert the grayscale value
+                const inverted = 255 - gray;
+                
+                data[i] = inverted;     // Red
+                data[i + 1] = inverted; // Green  
+                data[i + 2] = inverted; // Blue
+                // Alpha stays the same
+            }
+
+            status.textContent = 'Background captured! Motion extraction is now active.';
+            
+            // Start the animation loop
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            renderFrame();
+        }
+
+        function renderFrame() {
+            if (!backgroundImageData || !ctx) return;
+
+            // Clear canvas and draw the inverted background
+            ctx.putImageData(backgroundImageData, 0, 0);
+            
+            // Continue animation
+            animationId = requestAnimationFrame(renderFrame);
+        }
+
+        function resetBackground() {
+            backgroundImageData = null;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            status.textContent = 'Background reset. Click "Capture Background" to set a new reference frame.';
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            backgroundImageData = null;
+            cameraContainer.style.display = 'none';
+            startBtn.disabled = false;
+            captureBtn.disabled = true;
+            resetBtn.disabled = true;
+            status.textContent = 'Camera stopped';
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        captureBtn.addEventListener('click', captureBackground);
+        resetBtn.addEventListener('click', resetBackground);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+</body>
+</html>
