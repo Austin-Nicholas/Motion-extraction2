@@ -1,7 +1,4 @@
-#canvas {
-            position: absolute;
-            top: 0;
-            left: 0;<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -59,6 +56,7 @@
             height: auto;
             max-width: 640px;
             max-height: 480px;
+            outline: none;
         }
 
         #canvas {
@@ -67,8 +65,6 @@
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.5;
-            mix-blend-mode: difference;
             pointer-events: none;
         }
 
@@ -78,6 +74,91 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-bottom: 20px;
+        }
+
+        .background-controls {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .background-controls h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #backgroundSlider {
+            width: 200px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        #backgroundSlider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(68, 160, 141, 0.4);
+        }
+
+        #backgroundSlider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(68, 160, 141, 0.4);
+        }
+
+        .delay-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #delayInput {
+            width: 60px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #delayInput::placeholder {
+            color: rgba(255, 255, 255, 0.6);
         }
 
         button {
@@ -91,6 +172,57 @@
             font-weight: 500;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+        }
+
+        #recordBtn {
+            background: linear-gradient(45deg, #8e44ad, #9b59b6);
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
+            position: relative;
+        }
+
+        #recordBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142, 68, 173, 0.4);
+        }
+
+        #recordBtn.recording {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            animation: recordPulse 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes recordPulse {
+            from { box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
+            to { box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6); }
+        }
+
+        .recording-timer {
+            color: #e74c3c;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .download-link {
+            display: none;
+            margin: 15px 0;
+        }
+
+        .download-link a {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            display: inline-block;
+        }
+
+        .download-link a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
         }
 
         button:hover {
@@ -129,6 +261,13 @@
             margin: 20px 0;
         }
 
+        .browser-support {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -141,6 +280,14 @@
             #video {
                 max-width: 100%;
             }
+
+            .slider-row {
+                flex-direction: column;
+            }
+
+            #backgroundSlider {
+                width: 150px;
+            }
         }
     </style>
 </head>
@@ -148,12 +295,31 @@
     <div class="container">
         <h1>Motion Extraction</h1>
         
-        <div class="status" id="status">Click "Start Camera" to begin</div>
+        <div class="status" id="status">Click Start Camera to begin</div>
         
         <div class="controls">
             <button id="startBtn">Start Camera</button>
             <button id="captureBtn" disabled>Capture Background</button>
+            <button id="recordBtn" disabled>Start Recording</button>
             <button id="resetBtn" disabled>Reset Background</button>
+        </div>
+        
+        <div class="background-controls" id="backgroundControls" style="display: none;">
+            <h3>Background Update Mode</h3>
+            
+            <div class="slider-container">
+                <label class="slider-label">Background Mode</label>
+                <div class="slider-row">
+                    <span style="color: rgba(255,255,255,0.8); font-size: 12px;">Static</span>
+                    <input type="range" id="backgroundSlider" min="0" max="1" step="1" value="0">
+                    <span style="color: rgba(255,255,255,0.8); font-size: 12px;">Dynamic</span>
+                </div>
+            </div>
+            
+            <div class="delay-input">
+                <label style="color: white; font-size: 14px;">Delay (seconds):</label>
+                <input type="number" id="delayInput" min="1" max="10" value="3" placeholder="3">
+            </div>
         </div>
         
         <div class="camera-container" id="cameraContainer" style="display: none;">
@@ -161,8 +327,15 @@
             <canvas id="canvas"></canvas>
         </div>
         
+        <div class="recording-timer" id="recordingTimer">⏺ Recording: 00:00</div>
+        
+        <div class="download-link" id="downloadLink">
+            <a href="#" download="motion-extraction-video.webm">📥 Download Recorded Video</a>
+        </div>
+        
         <div class="info">
-            <p><strong>How it works:</strong> This motion extraction filter captures a background frame, converts it to black and white, inverts it, and overlays it on the live video feed. Moving objects will appear more prominently as they differ from the static background.</p>
+            <p><strong>How it works:</strong> This motion extraction filter compares the live video with a background reference. In static mode, the background is captured once. In dynamic mode, the background continuously updates with a delay, creating different motion effects.</p>
+            <div class="browser-support" id="browserSupport"></div>
         </div>
         
         <div id="error" class="error" style="display: none;"></div>
@@ -173,13 +346,63 @@
         let backgroundImageData = null;
         let stream = null;
         let animationId = null;
+        
+        // Recording variables
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        let isRecording = false;
+
+        // Dynamic background variables
+        let frameHistory = [];
+        let isDynamicMode = false;
+        let backgroundDelay = 3; // seconds
 
         const startBtn = document.getElementById('startBtn');
         const captureBtn = document.getElementById('captureBtn');
+        const recordBtn = document.getElementById('recordBtn');
         const resetBtn = document.getElementById('resetBtn');
         const status = document.getElementById('status');
         const cameraContainer = document.getElementById('cameraContainer');
+        const backgroundControls = document.getElementById('backgroundControls');
         const errorDiv = document.getElementById('error');
+        const recordingTimerDiv = document.getElementById('recordingTimer');
+        const downloadLink = document.getElementById('downloadLink');
+        const browserSupportDiv = document.getElementById('browserSupport');
+        const backgroundSlider = document.getElementById('backgroundSlider');
+        const delayInput = document.getElementById('delayInput');
+
+        // Check canvas recording support
+        function checkCanvasRecordingSupport() {
+            const isSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+            const hasMediaRecorder = typeof MediaRecorder !== 'undefined';
+            const hasCanvas = !!document.createElement('canvas').getContext;
+            const format = getCanvasRecordingFormat();
+            const formatSupported = MediaRecorder.isTypeSupported(format);
+            
+            let supportMessage = '';
+            
+            if (!isSecureContext) {
+                supportMessage = 'Recording requires HTTPS or localhost for security.';
+            } else if (!hasMediaRecorder) {
+                supportMessage = 'Your browser doesn\'t support video recording.';
+            } else if (!hasCanvas) {
+                supportMessage = 'Canvas not supported.';
+            } else if (!formatSupported) {
+                supportMessage = 'Canvas recording format not supported.';
+            } else {
+                supportMessage = `Canvas recording ready: ${format.split(';')[0]}`;
+            }
+            
+            browserSupportDiv.textContent = supportMessage;
+            
+            return hasMediaRecorder && isSecureContext && hasCanvas && formatSupported;
+        }
+
+        function getCanvasRecordingFormat() {
+            return 'video/webm;codecs=vp8';
+        }
 
         function showError(message) {
             errorDiv.textContent = message;
@@ -190,39 +413,47 @@
             errorDiv.style.display = 'none';
         }
 
+        function initializeVideo() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                cameraContainer.style.display = 'inline-block';
+                backgroundControls.style.display = 'block';
+                captureBtn.disabled = false;
+                resetBtn.disabled = false;
+                
+                // Initialize frame history for dynamic mode
+                frameHistory = [];
+            });
+        }
+
         async function startCamera() {
             try {
                 hideError();
                 status.textContent = 'Requesting camera access...';
                 
-                // Request camera with preference for back camera on mobile
+                stopVideo();
+                
                 const constraints = {
                     video: {
                         width: { ideal: 640 },
                         height: { ideal: 480 },
-                        facingMode: { ideal: 'environment' } // Try back camera first
+                        facingMode: { ideal: 'environment' }
                     }
                 };
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 
-                video = document.getElementById('video');
-                canvas = document.getElementById('canvas');
-                ctx = canvas.getContext('2d');
-
+                initializeVideo();
                 video.srcObject = stream;
                 
-                video.addEventListener('loadedmetadata', () => {
-                    // Set canvas size to match video
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    
-                    cameraContainer.style.display = 'inline-block';
-                    startBtn.disabled = true;
-                    captureBtn.disabled = false;
-                    resetBtn.disabled = false;
-                    status.textContent = 'Camera ready! Click "Capture Background" to set the reference frame.';
-                });
+                startBtn.disabled = true;
+                status.textContent = 'Camera ready! Click "Capture Background" to start motion extraction.';
 
             } catch (error) {
                 console.error('Error accessing camera:', error);
@@ -244,36 +475,108 @@
         function captureBackground() {
             if (!video || !ctx) return;
 
-            // Capture current frame and store as color background
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            backgroundImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // Update mode based on slider
+            isDynamicMode = backgroundSlider.value === '1';
+            backgroundDelay = parseInt(delayInput.value) || 3;
 
-            status.textContent = 'Background captured! Motion extraction is now active.';
+            if (!isDynamicMode) {
+                // Static mode - capture current frame
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                backgroundImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                status.textContent = 'Static background captured! Motion extraction is active.';
+            } else {
+                // Dynamic mode - start frame history collection
+                frameHistory = [];
+                status.textContent = `Dynamic background mode active! Background updates with ${backgroundDelay}s delay.`;
+            }
+
+            if (checkCanvasRecordingSupport()) {
+                recordBtn.disabled = false;
+            }
             
-            // Start the animation loop
             if (animationId) {
                 cancelAnimationFrame(animationId);
             }
             renderFrame();
         }
 
+        function updateFrameHistory() {
+            if (!isDynamicMode || !video || !ctx) return;
+
+            // Create a temporary canvas to capture the current frame
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+            const frameData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+            // Add timestamp
+            const frameWithTime = {
+                data: frameData,
+                timestamp: Date.now()
+            };
+
+            frameHistory.push(frameWithTime);
+
+            // Remove frames older than needed (keep some extra for smooth updates)
+            const maxAge = (backgroundDelay + 1) * 1000; // Add 1 second buffer
+            frameHistory = frameHistory.filter(frame => 
+                Date.now() - frame.timestamp < maxAge
+            );
+        }
+
+        function getDynamicBackground() {
+            if (!isDynamicMode || frameHistory.length === 0) {
+                return backgroundImageData;
+            }
+
+            const targetTime = Date.now() - (backgroundDelay * 1000);
+            
+            // Find the frame closest to our target time
+            let closestFrame = frameHistory[0];
+            let closestDiff = Math.abs(targetTime - closestFrame.timestamp);
+
+            for (let i = 1; i < frameHistory.length; i++) {
+                const diff = Math.abs(targetTime - frameHistory[i].timestamp);
+                if (diff < closestDiff) {
+                    closestDiff = diff;
+                    closestFrame = frameHistory[i];
+                }
+            }
+
+            return closestFrame.data;
+        }
+
         function renderFrame() {
-            if (!backgroundImageData || !ctx || !video) return;
+            if (!ctx || !video) return;
+
+            // Update frame history if in dynamic mode
+            if (isDynamicMode) {
+                updateFrameHistory();
+            }
+
+            // Get the current background (static or dynamic)
+            const currentBackground = getDynamicBackground();
+            if (!currentBackground) {
+                animationId = requestAnimationFrame(renderFrame);
+                return;
+            }
 
             // Get current frame
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // Create motion mask by comparing current frame with background
-            const bgData = backgroundImageData.data;
+            // Create motion mask
+            const bgData = currentBackground.data;
             const currData = currentFrame.data;
             const outputData = new ImageData(canvas.width, canvas.height);
             const output = outputData.data;
             
-            const threshold = 30; // Sensitivity for motion detection
+            const threshold = 30;
             
             for (let i = 0; i < bgData.length; i += 4) {
-                // Calculate difference between current and background
                 const rDiff = Math.abs(currData[i] - bgData[i]);
                 const gDiff = Math.abs(currData[i + 1] - bgData[i + 1]);
                 const bDiff = Math.abs(currData[i + 2] - bgData[i + 2]);
@@ -284,28 +587,124 @@
                     const gray = 0.299 * currData[i] + 0.587 * currData[i + 1] + 0.114 * currData[i + 2];
                     const inverted = 255 - gray;
                     
-                    output[i] = inverted;     // Red
-                    output[i + 1] = inverted; // Green
-                    output[i + 2] = inverted; // Blue
-                    output[i + 3] = 255;      // Full opacity
+                    output[i] = inverted;
+                    output[i + 1] = inverted;
+                    output[i + 2] = inverted;
+                    output[i + 3] = 255;
                 } else {
                     // No motion - show original background color
-                    output[i] = bgData[i];         // Red
-                    output[i + 1] = bgData[i + 1]; // Green
-                    output[i + 2] = bgData[i + 2]; // Blue
-                    output[i + 3] = 255;           // Full opacity
+                    output[i] = bgData[i];
+                    output[i + 1] = bgData[i + 1];
+                    output[i + 2] = bgData[i + 2];
+                    output[i + 3] = 255;
                 }
             }
             
-            // Draw the processed frame
             ctx.putImageData(outputData, 0, 0);
-            
-            // Continue animation
             animationId = requestAnimationFrame(renderFrame);
         }
 
+        function startRecording() {
+            if (!canvas || isRecording || !checkCanvasRecordingSupport()) return;
+
+            try {
+                const canvasStream = canvas.captureStream(30);
+                recordedChunks = [];
+                
+                const mimeType = getCanvasRecordingFormat();
+                const options = { mimeType };
+                
+                mediaRecorder = new MediaRecorder(canvasStream, options);
+
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = function() {
+                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const downloadLinkEl = downloadLink.querySelector('a');
+                    downloadLinkEl.href = url;
+                    downloadLinkEl.download = `motion-extraction-${new Date().getTime()}.webm`;
+                    downloadLink.style.display = 'block';
+                    
+                    status.textContent = 'Recording complete! Click download link to save.';
+                };
+
+                mediaRecorder.onerror = function(event) {
+                    console.error('MediaRecorder error:', event.error);
+                    showError(`Recording error: ${event.error.name || 'Unknown error'}`);
+                    stopRecording();
+                };
+
+                mediaRecorder.start(100);
+                isRecording = true;
+                recordingStartTime = Date.now();
+                
+                recordBtn.textContent = 'Stop Recording';
+                recordBtn.classList.add('recording');
+                recordingTimerDiv.style.display = 'block';
+                
+                recordingTimer = setInterval(updateRecordingTimer, 100);
+                
+                status.textContent = 'Recording motion extraction...';
+                
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                showError('Unable to start recording. Please try refreshing the page or use a different browser.');
+                isRecording = false;
+                recordBtn.textContent = 'Start Recording';
+                recordBtn.classList.remove('recording');
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+
+            try {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            } catch (error) {
+                console.error('Error stopping recording:', error);
+            }
+            
+            isRecording = false;
+            
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+            
+            recordBtn.textContent = 'Start Recording';
+            recordBtn.classList.remove('recording');
+            recordingTimerDiv.style.display = 'none';
+        }
+
+        function updateRecordingTimer() {
+            if (!recordingStartTime) return;
+            
+            const elapsed = Date.now() - recordingStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            
+            const timeString = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            recordingTimerDiv.textContent = `⏺ Recording: ${timeString}`;
+        }
+
         function resetBackground() {
+            if (isRecording) {
+                stopRecording();
+            }
+            
             backgroundImageData = null;
+            frameHistory = [];
+            isDynamicMode = false;
+            
             if (animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
@@ -315,10 +714,17 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
             
-            status.textContent = 'Background reset. Click "Capture Background" to set a new reference frame.';
+            recordBtn.disabled = true;
+            downloadLink.style.display = 'none';
+            
+            status.textContent = 'Background reset. Capture a new background to continue.';
         }
 
-        function stopCamera() {
+        function stopVideo() {
+            if (isRecording) {
+                stopRecording();
+            }
+            
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 stream = null;
@@ -329,21 +735,63 @@
                 animationId = null;
             }
             
+            if (video) {
+                video.srcObject = null;
+            }
+            
             backgroundImageData = null;
+            frameHistory = [];
+            isDynamicMode = false;
             cameraContainer.style.display = 'none';
+            backgroundControls.style.display = 'none';
+            recordingTimerDiv.style.display = 'none';
+            downloadLink.style.display = 'none';
             startBtn.disabled = false;
             captureBtn.disabled = true;
+            recordBtn.disabled = true;
+            recordBtn.textContent = 'Start Recording';
+            recordBtn.classList.remove('recording');
             resetBtn.disabled = true;
-            status.textContent = 'Camera stopped';
+            status.textContent = 'Click Start Camera to begin';
         }
 
         // Event listeners
         startBtn.addEventListener('click', startCamera);
         captureBtn.addEventListener('click', captureBackground);
+        recordBtn.addEventListener('click', toggleRecording);
         resetBtn.addEventListener('click', resetBackground);
 
+        // Background control listeners
+        backgroundSlider.addEventListener('input', function() {
+            isDynamicMode = this.value === '1';
+            if (backgroundImageData || frameHistory.length > 0) {
+                const mode = isDynamicMode ? 'dynamic' : 'static';
+                status.textContent = `Switched to ${mode} background mode.`;
+            }
+        });
+
+        delayInput.addEventListener('input', function() {
+            backgroundDelay = parseInt(this.value) || 3;
+            if (isDynamicMode && (backgroundImageData || frameHistory.length > 0)) {
+                status.textContent = `Background delay updated to ${backgroundDelay} seconds.`;
+            }
+        });
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            checkCanvasRecordingSupport();
+        });
+
         // Cleanup on page unload
-        window.addEventListener('beforeunload', stopCamera);
+        window.addEventListener('beforeunload', stopVideo);
     </script>
 </body>
 </html>
